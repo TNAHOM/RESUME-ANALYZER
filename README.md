@@ -1,9 +1,9 @@
 # n8n-Driven Resume Analyzer (Secure & AI-Powered)
 
-## 🧠 Summary
+## Summary
 A minimal backend service paired with an n8n-based automation flow to process PDF resumes. Uploaded resumes are sent through a workflow that extracts text, invokes Gemini for structured data extraction, and stores the results in Supabase. All services are orchestrated via Docker Compose for quick setup and deployment.
 
-## 🚀 Features
+## Features
 - Accept PDF resume uploads via HTTP API
 - Send resumes to n8n for:
   - Text extraction
@@ -11,7 +11,7 @@ A minimal backend service paired with an n8n-based automation flow to process PD
   - Structured JSON transformation
   - Persist extracted data into Supabase
 
-## 🧱 Project Components
+## Project Components
 ```
 resume-analyzer/
 ├── .dockerignore
@@ -40,14 +40,13 @@ resume-analyzer/
 └── README.md               # Project documentation
 ```
 
-## 🛠️ Prerequisites
+## Prerequisites
 - Docker & Docker Compose
 - (Optional) Python 3.11+ for local development
 - A Google Service Account JSON key
 - Gemini API key 
-- Supabase project URL and anonymous/public API key
 
-## 🔧 Configuration
+## Configuration
 Before you begin, set up Google Drive API credentials:
 1. In the Google Cloud Console, enable the Google Drive API.
 2. Create a service account with Drive File permissions.
@@ -86,11 +85,7 @@ On success, the response returns the original filename and a link (if configured
 ## n8n Workflow
 The `resume_workflow.json` defines an n8n flow:
 1. **Trigger**: Webhook node listens for incoming requests.
-2. **Text Extraction**: Extract PDF text using a Tika or Node module.
+2. **Text Extraction**: Extract PDF text.
 3. **Gemini**: Prompt the model to parse full name, email, phone, skills, years of experience, and last job title.
 4. **Data Transformation**: Format LLM response into structured JSON.
 5. **Supabase**: Use Supabase node to insert the record into your Supabase database.
-6. _(Optional)_ Export to Google Sheets, Airtable, or send Slack notifications.
-
-## Database Schema
-<!-- Database schema management is handled in Supabase; no local schema in this repo -->
