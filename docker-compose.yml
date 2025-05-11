@@ -1,0 +1,15 @@
+services:
+  backend:
+    build:
+      # Change context to the project root directory
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: resume-analyzer-backend
+    env_file:
+      - ./.env
+    volumes:
+      - ./credential.json:/app/credential.json:ro
+      - ./storage:/app/storage
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

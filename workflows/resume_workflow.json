@@ -1,0 +1,330 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        220
+      ],
+      "id": "8253664b-71f4-4e79-b4a7-99fa4310904f",
+      "name": "Webhook",
+      "webhookId": "933463a4-eaa0-44c9-b37a-068bf159dfc7",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.pdfUrl }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        60,
+        220
+      ],
+      "id": "af55abe9-891e-4fe4-b3a0-8430fb0b6b29",
+      "name": "Google Drive",
+      "credentials": {
+        "googleApi": {
+          "id": "YXam1wR6jdmD2xBQ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        320,
+        220
+      ],
+      "id": "d6dfafc9-c5df-4403-afe1-ec008e7b9e0a",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Your task is to extract specific information from the provided resume text and format it as a JSON object.  **You MUST strictly follow the output structure defined by the JSON schema provided below.**  **Key Instructions:**  1.  **Output Format:** Your response MUST be a single JSON object. Output *only* the JSON object and nothing else (no introductory text, explanations, or surrounding characters other than the JSON curly braces). 2.  **Schema Adherence:** You MUST include ALL fields defined in the provided JSON schema. 3.  **Missing Information:** If you cannot find the information for a required string field (Full name, Email, Phone, Skills, Experience Description, Last Job Role Title) in the resume text, provide an empty string `\"\"` for that field's value. 4.  **Work Experience Calculation:**     *   Identify professional work experience sections (distinguish from projects if possible, focusing on roles with explicit start and end dates).     *   For each professional work experience entry with an end date like \"present\", \"current\", \"ongoing\", or similar, use the provided current date value `{{ $now }}` as the end date for calculating duration.     *   Calculate the duration of each professional role from its start date to its end date (or `{{ $now }}`).     *   Sum the durations of *all* professional work experiences.     *   Calculate the total sum as a number representing years, allowing for decimal places (float years).     *   Populate the \"Total Years of professional work Experience not just project in Float Years\" field with this calculated float number. If no professional experience is found, this value should be `0.0`. 5.  **Data Extraction:** Carefully read the resume text to extract the most accurate information for each field.  **JSON Schema (for your reference and to guide the model):** ```json {           \"type\": \"object\",           \"properties\": {             \"Full name\": {               \"type\": \"string\"             },             \"Email\": {               \"type\": \"string\"             },             \"Phone\": {               \"type\": \"string\"             },             \"Skills\": {               \"type\": \"array\",               \"items\": {                 \"type\": \"string\"               }             },             \"Experience Description\": {               \"type\": \"array\",               \"items\": {                 \"type\": \"string\"               }             },             \"Last Job Role Title\": {               \"type\": \"string\"             },               \"Total Years of proffessional work Experience not just project in Float Years\": {                 \"type\": \"number\"             }           },           \"required\": [             \"Full name\",             \"Email\",             \"Phone\",             \"Skills\",             \"Experience Description\",             \"Last Job Role Title\",             \"Total Years of proffessional work Experience not just project in Float Years\"           ]         }"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        660,
+        220
+      ],
+      "id": "a527555d-f5c4-411a-8761-bd2e054360f4",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-lite-preview-02-05",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        580,
+        380
+      ],
+      "id": "205b0aa0-c63b-4899-a272-4db9a447fb83",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qSbHmhLlx6js7G4I",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n          \"type\": \"object\",\n          \"properties\": {\n            \"Full name\": {\n              \"type\": \"string\"\n            },\n            \"Email\": {\n              \"type\": \"string\"\n            },\n            \"Phone\": {\n              \"type\": \"string\"\n            },\n            \"Skills\": {\n              \"type\": \"array\",\n              \"items\": {\n                \"type\": \"string\"\n              }\n            },\n            \"Experience Description\": {\n              \"type\": \"array\",\n              \"items\": {\n                \"type\": \"string\"\n              }\n            },\n            \"Last Job Role Title\": {\n              \"type\": \"string\"\n            },\n              \"Total Years of proffessional work Experience not just project in Float Years\": {\n                \"type\": \"number\"\n            }\n          },\n          \"required\": [\n            \"Full name\",\n            \"Email\",\n            \"Phone\",\n            \"Skills\",\n            \"Experience Description\",\n            \"Last Job Role Title\",\n            \"Total Years of proffessional work Experience not just project in Float Years\"\n          ]\n        }\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        400
+      ],
+      "id": "293b7112-5cbe-400f-9d30-a24b79370508",
+      "name": "Structured Output Parser",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "resumes",
+          "mode": "list",
+          "cachedResultName": "resumes"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "full_name": "={{ $json.output['Full name'] }}",
+            "email": "={{ $json.output.Email }}",
+            "phone": "={{ $json.output.Phone }}",
+            "filename": "={{ $json.output['Full name'] }} resume",
+            "skills": "={{ $json.output.Skills }}",
+            "last_job_title": "={{ $json.output['Last Job Role Title'] }}",
+            "experience_years": "={{ $json.output['Total Years of Experience in Float Years'] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "filename",
+              "displayName": "filename",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "array",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "experience_years",
+              "displayName": "experience_years",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_job_title",
+              "displayName": "last_job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uploaded_at",
+              "displayName": "uploaded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1100,
+        220
+      ],
+      "id": "f86eaad6-a0e2-4740-babc-4213cc855766",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "3jiY7ilB5JnSgsdq",
+          "name": "Postgres Connection"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "119a09a0-9fc9-4f12-951a-db3fe1083918",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cb5a1825f8cee1d8a6d0eefef81b12fb09a8a2832b51f683860db85825de6ed0"
+  },
+  "id": "G4bTl6o3rNnWdni0",
+  "tags": []
+}
